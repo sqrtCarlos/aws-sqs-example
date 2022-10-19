@@ -1,0 +1,15 @@
+default: &default
+  REGION: ${env:REGION}
+  SQS_QUEUE_URL: { Ref: SlackMessagesQueue }
+
+local:
+  <<: *default
+  STAGE: local
+
+dev:
+  <<: *default
+  STAGE: dev
+
+prod:
+  <<: *default
+  STAGE: prod

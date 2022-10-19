@@ -1,0 +1,56 @@
+service: aws-sls-sqs-test
+frameworkVersion: '3'
+
+useDotenv: true
+
+custom:  
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  serverless-offline:
+    noPrependStageInUrl: true
+  globalEnv: ${file(./serverless/env-default.yml):${self:custom.stage}}
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  environment: ${self:custom.globalEnv}
+  versionFunctions: false
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+          - 'sqs:ListQueues'
+          - 'sqs:SendMessage'
+          - 'sqs:GetQueueUrl'
+          Resource:
+          - Fn::GetAtt: [ SlackMessagesQueue, Arn ]
+
+functions:
+  hello:
+    handler: handler.producer
+    events:
+      - httpApi:
+         path: /hello
+         method: post
+    timeout: 780
+  sqsHello:
+    handler: handler.consumer
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ SlackMessagesQueue, Arn ]
+
+plugins:
+  - serverless-lift
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+resources:
+  Resources:
+    SlackMessagesQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.stage}-sqs-test
