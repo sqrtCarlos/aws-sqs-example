@@ -31,7 +31,7 @@ To learn more:
 Install dependencies with:
 
 ```
-npm i
+npm install
 ```
 
 Then deploy:
